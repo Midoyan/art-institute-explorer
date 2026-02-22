@@ -1,22 +1,48 @@
 import "./App.css";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import type { Artwork } from "./schema/artworks";
 import { addToGallery } from "./utils/galleryStorage";
 import Gallery from "./components/Gallery";
 import ArtworkCard from "./components/ArtworkCard";
+import { fetchArtworkSearch } from "./utils/fetchArtwork";
+import { readGallery } from "./utils/galleryStorage";
+import type { Gallery as GalleryType } from "./schema/gallery";
 
 function App() {
-  const [refreshSignal, setRefreshSignal] = useState(0);
-
-  const exampleResults: Artwork[] = [
-    { id: 1, title: "Example Artwork 1", artist_title: "Example Artist", image_id: null },
-    { id: 2, title: "Example Artwork 2", artist_title: "Another Artist", image_id: null },
-  ];
+  const [gallery, setGallery] = useState<GalleryType>(() => readGallery());
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Artwork[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function handleAdd(artwork: Artwork) {
     addToGallery(artwork);
+    setGallery(prev => [{ artwork, note: "" }, ...prev]);
+  }
 
-    setRefreshSignal((prev) => prev + 1);
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setResults([]);
+      setError(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    fetchArtworkSearch(trimmed)
+      .then((items) => {
+        setResults(items);
+      })
+      .catch((err: Error) => {
+        setError(err.message || "Search failed");
+        setResults([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }
 
   return (
@@ -27,10 +53,25 @@ function App() {
       </header>
 
       <section className="section">
-        <h2 className="section__title">Results (temporary)</h2>
+        <h2 className="section__title">Search the collection</h2>
+
+        <form className="searchForm" onSubmit={handleSearch}>
+          <input
+            className="input"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Portrait, landscape, Picasso..."
+          />
+          <button className="btn" type="submit" disabled={isLoading}>
+            {isLoading ? "Searching..." : "Search"}
+          </button>
+        </form>
+
+        {error ? <p className="muted">{error}</p> : null}
 
         <div className="grid">
-          {exampleResults.map((art) => (
+          {results.map((art) => (
             <div key={art.id} className="galleryItem">
               <ArtworkCard artwork={art} />
 
@@ -40,9 +81,13 @@ function App() {
             </div>
           ))}
         </div>
+
+        {!isLoading && !error && results.length === 0 ? (
+          <p className="muted">No results yet. Run a search to see artworks.</p>
+        ) : null}
       </section>
 
-      <Gallery refreshSignal={refreshSignal} />
+      <Gallery gallery={gallery} setGallery={setGallery} />
     </div>
   );
 }

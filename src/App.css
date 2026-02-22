@@ -19,6 +19,18 @@
   margin: 0 0 12px 0;
 }
 
+.searchForm {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.searchForm .btn {
+  margin-top: 0;
+}
+
 .muted {
   color: #666;
 }
@@ -71,8 +83,16 @@
 }
 
 .textarea {
-  width: 100%;
   padding: 8px;
+  max-width: 100%;
+  resize: vertical;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #ccc;
 }

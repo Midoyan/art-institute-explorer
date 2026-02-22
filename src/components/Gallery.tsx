@@ -1,23 +1,13 @@
-import { useEffect, useState } from "react";
 import type { Gallery as GalleryType } from "../schema/gallery";
 import ArtworkCard from "./ArtworkCard";
-import { readGallery, removeFromGallery, updateNote } from "../utils/galleryStorage";
+import { removeFromGallery, updateNote } from "../utils/galleryStorage";
 
 type Props = {
-  refreshSignal: number;
+  gallery: GalleryType;
+  setGallery: (gallery: GalleryType) => void;
 };
 
-export default function Gallery({ refreshSignal }: Props) {
-  const [gallery, setGallery] = useState<GalleryType>([]);
-
-  useEffect(() => {
-    setGallery(readGallery());
-  }, []);
-
-  useEffect(() => {
-    setGallery(readGallery());
-  }, [refreshSignal]);
-
+export default function Gallery({ gallery, setGallery }: Props) {
   function handleDelete(id: number) {
     const updated = removeFromGallery(id);
 
